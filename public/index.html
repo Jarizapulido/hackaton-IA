@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitSurvivor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">FITSURVIVOR</span>
+      </div>
+      <nav class="nav-menu">
+        <button class="nav-item active" data-section="ejercicios">
+          <span class="nav-icon">🏋️</span>
+          <span class="nav-label">Ejercicios</span>
+        </button>
+        <button class="nav-item" data-section="perfil">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+        <button class="nav-item" data-section="rutinas">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Rutinas</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <!-- Ejercicios Section -->
+      <section id="ejercicios" class="section active">
+        <div class="section-header">
+          <h1>Biblioteca de Ejercicios</h1>
+          <button class="btn btn-primary" id="addExerciseBtn">
+            <span>+</span> Nuevo Ejercicio
+          </button>
+        </div>
+        
+        <div class="filters">
+          <input type="text" id="exerciseSearch" placeholder="Buscar ejercicios..." class="search-input">
+          <select id="muscleFilter" class="filter-select">
+            <option value="">Todos los músculos</option>
+            <option value="pecho">Pecho</option>
+            <option value="espalda">Espalda</option>
+            <option value="piernas">Piernas</option>
+            <option value="brazos">Brazos</option>
+            <option value="core">Core</option>
+            <option value="hombros">Hombros</option>
+          </select>
+        </div>
+
+        <div id="exercisesList" class="exercises-grid"></div>
+      </section>
+
+      <!-- Perfil Section -->
+      <section id="perfil" class="section">
+        <div class="section-header">
+          <h1>Perfil de Usuario</h1>
+        </div>
+        
+        <form id="profileForm" class="profile-form">
+          <div class="form-group">
+            <input type="text" id="profileName" required>
+            <label for="profileName">Nombre</label>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <input type="number" id="profileWeight" step="0.1" required>
+              <label for="profileWeight">Peso (kg)</label>
+            </div>
+            <div class="form-group">
+              <input type="number" id="profileHeight" required>
+              <label for="profileHeight">Altura (cm)</label>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <select id="profileExperience" required>
+                <option value="beginner">Principiante</option>
+                <option value="intermediate">Intermedio</option>
+                <option value="advanced">Avanzado</option>
+              </select>
+              <label for="profileExperience">Nivel</label>
+            </div>
+            <div class="form-group">
+              <select id="profileGoal" required>
+                <option value="muscle">Ganar Músculo</option>
+                <option value="weight_loss">Perder Peso</option>
+                <option value="endurance">Resistencia</option>
+              </select>
+              <label for="profileGoal">Objetivo</label>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-large">Guardar Perfil</button>
+        </form>
+      </section>
+
+      <!-- Rutinas Section -->
+      <section id="rutinas" class="section">
+        <div class="section-header">
+          <h1>Mis Rutinas</h1>
+          <button class="btn btn-primary" id="createRoutineBtn">
+            <span>+</span> Nueva Rutina
+          </button>
+        </div>
+        
+        <div id="routinesList" class="routines-grid"></div>
+      </section>
+
+      <!-- Routine Editor Modal -->
+      <div id="routineEditor" class="modal">
+        <div class="modal-content large">
+          <div class="modal-header">
+            <h2 id="routineEditorTitle">Nueva Rutina</h2>
+            <button class="close-modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="routine-info">
+              <div class="form-group">
+                <input type="text" id="routineName" placeholder="Nombre de la rutina" required>
+                <label for="routineName">Nombre</label>
+              </div>
+              <div class="form-group">
+                <textarea id="routineDescription" placeholder="Descripción (opcional)"></textarea>
+                <label for="routineDescription">Descripción</label>
+              </div>
+            </div>
+            
+            <div class="routine-builder">
+              <div class="builder-panel">
+                <h3>Ejercicios Disponibles</h3>
+                <div id="exercisePicker" class="exercise-picker"></div>
+              </div>
+              
+              <div class="builder-panel">
+                <h3> Rutina</h3>
+                <div id="routineExercises" class="routine-exercises"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary close-modal">Cancelar</button>
+            <button class="btn btn-primary" id="saveRoutineBtn">Guardar Rutina</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercise Modal -->
+      <div id="exerciseModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="exerciseModalTitle">Nuevo Ejercicio</h2>
+            <button class="close-modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="exerciseForm">
+              <div class="form-group">
+                <input type="text" id="exerciseName" required>
+                <label for="exerciseName">Nombre del ejercicio</label>
+              </div>
+              <div class="form-group">
+                <select id="exerciseMuscle" required>
+                  <option value="pecho">Pecho</option>
+                  <option value="espalda">Espalda</option>
+                  <option value="piernas">Piernas</option>
+                  <option value="brazos">Brazos</option>
+                  <option value="core">Core</option>
+                  <option value="hombros">Hombros</option>
+                </select>
+                <label for="exerciseMuscle">Grupo muscular</label>
+              </div>
+              <div class="form-group">
+                <select id="exerciseType" required>
+                  <option value="reps">Repeticiones</option>
+                  <option value="time">Tiempo (segundos)</option>
+                </select>
+                <label for="exerciseType">Tipo</label>
+              </div>
+              <div class="form-group">
+                <input type="number" id="exerciseValue" min="1" required>
+                <label for="exerciseValue">Valor por defecto</label>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary close-modal">Cancelar</button>
+            <button class="btn btn-primary" id="saveExerciseBtn">Guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workout Modal -->
+      <div id="workoutModal" class="modal">
+        <div class="modal-content large">
+          <div class="modal-header">
+            <h2 id="workoutTitle">Rutina: </h2>
+            <button class="close-modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="workout-progress">
+              <div class="progress-bar">
+                <div id="workoutProgress" class="progress-fill"></div>
+              </div>
+              <span id="workoutProgressText">0 / 0</span>
+            </div>
+            <div id="currentExercise" class="current-exercise">
+              <h3 id="currentExerciseName">Ejercicio</h3>
+              <div class="exercise-details">
+                <span id="currentExerciseSeries">Series: 1</span>
+                <span id="currentExerciseReps">Reps: 10</span>
+              </div>
+            </div>
+            <div id="workoutActions" class="workout-actions">
+              <button class="btn btn-primary" id="completeExerciseBtn">✓ Completar</button>
+              <button class="btn btn-secondary" id="skipExerciseBtn">Saltar →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/js/data.js"></script>
+  <script src="/js/components.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
