@@ -11,12 +11,80 @@ let timerSeconds = 0;
 let isTimerRunning = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+  initUsers();
   initNavigation();
   initExercises();
   initProfile();
   initRoutines();
   initModals();
+  
+  if (!window.dataManager.currentUserId) {
+    showModal('newUserModal');
+  }
 });
+
+function initUsers() {
+  const userSelect = document.getElementById('userSelect');
+  const addUserBtn = document.getElementById('addUserBtn');
+  const createUserBtn = document.getElementById('createUserBtn');
+  
+  renderUserSelect();
+  
+  userSelect.addEventListener('change', () => {
+    const userId = userSelect.value;
+    if (userId) {
+      window.dataManager.setCurrentUserId(userId);
+      refreshCurrentView();
+    }
+  });
+  
+  addUserBtn.addEventListener('click', () => {
+    document.getElementById('newUserName').value = '';
+    showModal('newUserModal');
+  });
+  
+  createUserBtn.addEventListener('click', () => {
+    const name = document.getElementById('newUserName').value.trim();
+    if (!name) {
+      alert('Introduce un nombre');
+      return;
+    }
+    
+    const newUser = window.dataManager.createUser(name);
+    window.dataManager.setCurrentUserId(newUser.id);
+    hideModal('newUserModal');
+    renderUserSelect();
+    refreshCurrentView();
+  });
+}
+
+function renderUserSelect() {
+  const userSelect = document.getElementById('userSelect');
+  const users = window.dataManager.users;
+  
+  userSelect.innerHTML = '<option value="">Seleccionar usuario</option>';
+  
+  users.forEach(user => {
+    const option = document.createElement('option');
+    option.value = user.id;
+    option.textContent = user.name;
+    if (user.id === window.dataManager.currentUserId) {
+      option.selected = true;
+    }
+    userSelect.appendChild(option);
+  });
+}
+
+function refreshCurrentView() {
+  if (currentSection === 'ejercicios') {
+    renderExercises();
+    renderExercisePicker();
+  } else if (currentSection === 'perfil') {
+    initProfile();
+  } else if (currentSection === 'rutinas') {
+    renderRoutines();
+  }
+}
 
 function initNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
@@ -185,18 +253,29 @@ function saveExercise() {
 function initProfile() {
   const form = document.getElementById('profileForm');
   const profile = window.dataManager.profile;
+  const currentUser = window.dataManager.currentUser;
   
-  document.getElementById('profileName').value = profile.name || '';
+  document.getElementById('profileName').value = currentUser?.name || '';
   document.getElementById('profileWeight').value = profile.weight || '';
   document.getElementById('profileHeight').value = profile.height || '';
   document.getElementById('profileExperience').value = profile.experience || 'beginner';
   document.getElementById('profileGoal').value = profile.goal || 'muscle';
   
-  form.addEventListener('submit', (e) => {
+  const existingHandler = form._submitHandler;
+  if (existingHandler) {
+    form.removeEventListener('submit', existingHandler);
+  }
+  
+  const submitHandler = (e) => {
     e.preventDefault();
     
+    const newName = document.getElementById('profileName').value.trim();
+    if (newName && newName !== currentUser?.name) {
+      window.dataManager.updateUser(window.dataManager.currentUserId, { name: newName });
+      renderUserSelect();
+    }
+    
     const profileData = {
-      name: document.getElementById('profileName').value.trim(),
       weight: parseFloat(document.getElementById('profileWeight').value),
       height: parseInt(document.getElementById('profileHeight').value),
       experience: document.getElementById('profileExperience').value,
@@ -211,7 +290,10 @@ function initProfile() {
     setTimeout(() => {
       btn.textContent = originalText;
     }, 2000);
-  });
+  };
+  
+  form._submitHandler = submitHandler;
+  form.addEventListener('submit', submitHandler);
 }
 
 function initRoutines() {

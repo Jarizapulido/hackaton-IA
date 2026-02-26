@@ -63,6 +63,39 @@ body {
   letter-spacing: 2px;
 }
 
+.user-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-selector label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.user-select {
+  padding: 10px 12px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.user-select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.user-selector .btn {
+  margin-top: 4px;
+}
+
 .nav-menu {
   display: flex;
   flex-direction: column;
@@ -403,6 +436,10 @@ body {
 
 .modal-content.large {
   max-width: 900px;
+}
+
+.modal-content.small {
+  max-width: 360px;
 }
 
 @keyframes modalIn {
