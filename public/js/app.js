@@ -6,6 +6,9 @@ let editingItemIndex = null;
 
 let workoutQueue = [];
 let currentWorkoutIndex = 0;
+let timerInterval = null;
+let timerSeconds = 0;
+let isTimerRunning = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   initNavigation();
@@ -343,6 +346,8 @@ function renderRoutineItems() {
   
   container.innerHTML = '';
   
+  let draggedIndex = null;
+  
   currentRoutineItems.forEach((item, index) => {
     let exerciseName = 'Descanso';
     if (!item.isRest) {
@@ -352,6 +357,8 @@ function renderRoutineItems() {
     
     const div = document.createElement('div');
     div.className = `routine-item ${item.isRest ? 'rest' : ''}`;
+    div.draggable = true;
+    div.dataset.index = index;
     div.innerHTML = `
       <span class="drag-handle">⋮⋮</span>
       <div class="routine-item-content">
@@ -367,6 +374,41 @@ function renderRoutineItems() {
         <button class="delete-item" data-index="${index}">🗑️</button>
       </div>
     `;
+    
+    div.addEventListener('dragstart', (e) => {
+      draggedIndex = index;
+      e.dataTransfer.effectAllowed = 'move';
+      div.style.opacity = '0.5';
+    });
+    
+    div.addEventListener('dragend', () => {
+      div.style.opacity = '1';
+      container.querySelectorAll('.routine-item').forEach(item => {
+        item.classList.remove('drag-over');
+      });
+    });
+    
+    div.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      div.classList.add('drag-over');
+    });
+    
+    div.addEventListener('dragleave', () => {
+      div.classList.remove('drag-over');
+    });
+    
+    div.addEventListener('drop', (e) => {
+      e.preventDefault();
+      div.classList.remove('drag-over');
+      
+      if (draggedIndex !== null && draggedIndex !== index) {
+        const item = currentRoutineItems.splice(draggedIndex, 1)[0];
+        currentRoutineItems.splice(index, 0, item);
+        renderRoutineItems();
+      }
+      draggedIndex = null;
+    });
     
     container.appendChild(div);
   });
@@ -489,13 +531,54 @@ function startWorkout(routineId) {
   updateWorkoutDisplay();
 }
 
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  isTimerRunning = false;
+}
+
 function updateWorkoutDisplay() {
+  stopTimer();
+  
   const current = workoutQueue[currentWorkoutIndex];
   const total = workoutQueue.length;
   
   const progress = ((currentWorkoutIndex / total) * 100);
   document.getElementById('workoutProgress').style.width = `${progress}%`;
   document.getElementById('workoutProgressText').textContent = `${currentWorkoutIndex + 1} / ${total}`;
+  
+  const completeBtn = document.getElementById('completeExerciseBtn');
+  const skipBtn = document.getElementById('skipExerciseBtn');
+  const timerDisplay = document.getElementById('timerDisplay');
+  
+  if (current.isRest || current.type === 'time') {
+    const duration = current.isRest ? current.duration : current.value;
+    timerSeconds = duration;
+    isTimerRunning = true;
+    
+    timerDisplay.classList.remove('hidden');
+    document.getElementById('timerSeconds').textContent = timerSeconds;
+    
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      document.getElementById('timerSeconds').textContent = timerSeconds;
+      
+      if (timerSeconds <= 0) {
+        stopTimer();
+        playTimerSound();
+        moveToNextExercise();
+      }
+    }, 1000);
+    
+    completeBtn.textContent = 'Completar';
+    skipBtn.textContent = 'Saltar →';
+  } else {
+    timerDisplay.classList.add('hidden');
+    completeBtn.textContent = '✓ Completar serie';
+    skipBtn.textContent = 'Saltar →';
+  }
   
   if (current.isRest) {
     document.getElementById('currentExerciseName').textContent = '⏱️ Descanso';
@@ -511,25 +594,48 @@ function updateWorkoutDisplay() {
   }
 }
 
-document.getElementById('completeExerciseBtn').addEventListener('click', () => {
+function playTimerSound() {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+  } catch (e) {
+    console.log('Audio not supported');
+  }
+}
+
+function moveToNextExercise() {
   currentWorkoutIndex++;
   if (currentWorkoutIndex >= workoutQueue.length) {
     finishWorkout();
   } else {
     updateWorkoutDisplay();
   }
+}
+
+document.getElementById('completeExerciseBtn').addEventListener('click', () => {
+  stopTimer();
+  moveToNextExercise();
 });
 
 document.getElementById('skipExerciseBtn').addEventListener('click', () => {
-  currentWorkoutIndex++;
-  if (currentWorkoutIndex >= workoutQueue.length) {
-    finishWorkout();
-  } else {
-    updateWorkoutDisplay();
-  }
+  stopTimer();
+  moveToNextExercise();
 });
 
 function finishWorkout() {
+  stopTimer();
   hideModal('workoutModal');
   alert('¡Enhorabuena! Has completado la rutina 🎉');
 }
