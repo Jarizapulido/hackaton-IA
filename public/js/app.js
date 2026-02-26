@@ -9,6 +9,18 @@ let currentWorkoutIndex = 0;
 let timerInterval = null;
 let timerSeconds = 0;
 let isTimerRunning = false;
+let roguelikeGame = null;
+let playerUpgrades = {
+  damageMultiplier: 1,
+  speedMultiplier: 1,
+  maxHealth: 5,
+  health: 5,
+  fireRate: 500,
+  pierce: 0,
+  regen: 0,
+  crit: 0,
+  projectiles: 1,
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   initUsers();
@@ -624,13 +636,26 @@ function updateWorkoutDisplay() {
   const skipBtn = document.getElementById('skipExerciseBtn');
   const timerDisplay = document.getElementById('timerDisplay');
   
-  if (current.isRest || current.type === 'time') {
+  const isRest = current.isRest;
+  const isTimeType = current.type === 'time';
+  const shouldOfferGame = isRest && current.duration >= 30;
+  
+  const originalClick = completeBtn.onclick;
+  
+  if (isRest || isTimeType) {
     const duration = current.isRest ? current.duration : current.value;
     timerSeconds = duration;
     isTimerRunning = true;
     
     timerDisplay.classList.remove('hidden');
     document.getElementById('timerSeconds').textContent = timerSeconds;
+    
+    if (shouldOfferGame) {
+      completeBtn.textContent = '🎮 Jugar y Completar';
+    } else {
+      completeBtn.textContent = 'Completar';
+    }
+    skipBtn.textContent = 'Saltar descanso →';
     
     timerInterval = setInterval(() => {
       timerSeconds--;
@@ -642,9 +667,6 @@ function updateWorkoutDisplay() {
         moveToNextExercise();
       }
     }, 1000);
-    
-    completeBtn.textContent = 'Completar';
-    skipBtn.textContent = 'Saltar →';
   } else {
     timerDisplay.classList.add('hidden');
     completeBtn.textContent = '✓ Completar serie';
@@ -663,6 +685,78 @@ function updateWorkoutDisplay() {
       ? `${current.value} repeticiones` 
       : `${current.value} segundos`;
   }
+  
+  completeBtn.onclick = (e) => {
+    e.preventDefault();
+    stopTimer();
+    if (shouldOfferGame && isRest) {
+      startRoguelikeGame(current.duration);
+    } else {
+      moveToNextExercise();
+    }
+  };
+
+  skipBtn.onclick = (e) => {
+    e.preventDefault();
+    stopTimer();
+    moveToNextExercise();
+  };
+}
+
+function startRoguelikeGame(duration) {
+  hideModal('workoutModal');
+  showModal('roguelikeModal');
+  
+  const gameContainer = document.getElementById('gameContainer');
+  document.getElementById('restTimeDisplay').textContent = duration;
+  document.getElementById('upgradeModal').classList.add('hidden');
+  
+  let gameEnded = false;
+  
+  const skipRest = () => {
+    if (gameEnded) return;
+    gameEnded = true;
+    
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    isTimerRunning = false;
+    
+    if (roguelikeGame) {
+      playerUpgrades = roguelikeGame.getUpgrades();
+      roguelikeGame.destroy();
+      roguelikeGame = null;
+    }
+    hideModal('roguelikeModal');
+    showModal('workoutModal');
+    moveToNextExercise();
+  };
+  
+  roguelikeGame = new RoguelikeGame(
+    gameContainer,
+    duration,
+    playerUpgrades,
+    (results) => {
+      if (gameEnded) return;
+      gameEnded = true;
+      if (roguelikeGame) {
+        playerUpgrades = roguelikeGame.getUpgrades();
+        roguelikeGame.destroy();
+        roguelikeGame = null;
+      }
+      hideModal('roguelikeModal');
+      moveToNextExercise();
+    },
+    (upgrade) => {
+      console.log('Upgrade selected:', upgrade);
+    }
+  );
+  
+  roguelikeGame.start();
+  
+  document.getElementById('closeGameModal').addEventListener('click', skipRest);
+  document.getElementById('skipRestGameBtn').addEventListener('click', skipRest);
 }
 
 function playTimerSound() {
@@ -695,18 +789,12 @@ function moveToNextExercise() {
   }
 }
 
-document.getElementById('completeExerciseBtn').addEventListener('click', () => {
-  stopTimer();
-  moveToNextExercise();
-});
-
-document.getElementById('skipExerciseBtn').addEventListener('click', () => {
-  stopTimer();
-  moveToNextExercise();
-});
-
 function finishWorkout() {
   stopTimer();
+  if (roguelikeGame) {
+    roguelikeGame.destroy();
+    roguelikeGame = null;
+  }
   hideModal('workoutModal');
   alert('¡Enhorabuena! Has completado la rutina 🎉');
 }
