@@ -61,7 +61,7 @@ function createExercisePickerItem(exercise) {
 
 function createRoutineItem(item, index, exerciseName) {
   const div = document.createElement('div');
-  div.className = `routine-item ${item.isRest ? 'rest' : ''} ${item.skippable ? 'skippable' : ''}`;
+  div.className = `routine-item ${item.isRest ? 'rest' : ''}`;
   div.dataset.index = index;
   
   if (item.isRest) {
@@ -70,10 +70,6 @@ function createRoutineItem(item, index, exerciseName) {
       <div class="routine-item-content">
         <div class="routine-item-name">Descanso</div>
         <div class="routine-item-details">${item.duration} segundos</div>
-      </div>
-      <div class="checkbox-label">
-        <input type="checkbox" ${item.skippable ? 'checked' : ''} disabled>
-        Saltable
       </div>
       <div class="routine-item-actions">
         <button class="edit-item" title="Editar">⚙️</button>
@@ -90,10 +86,6 @@ function createRoutineItem(item, index, exerciseName) {
       <div class="routine-item-content">
         <div class="routine-item-name">${exerciseName}</div>
         <div class="routine-item-details">${detail}</div>
-      </div>
-      <div class="checkbox-label">
-        <input type="checkbox" ${item.skippable ? 'checked' : ''} disabled>
-        Saltable
       </div>
       <div class="routine-item-actions">
         <button class="edit-item" title="Editar">⚙️</button>

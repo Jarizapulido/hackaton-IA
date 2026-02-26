@@ -365,10 +365,6 @@ function renderRoutineItems() {
         <div class="routine-item-name">${exerciseName}</div>
         <div class="routine-item-details">${item.isRest ? `${item.duration}s` : `${item.series}x${item.value} ${item.type === 'reps' ? 'rep' : 's'}`}</div>
       </div>
-      <label class="checkbox-label">
-        <input type="checkbox" ${item.skippable ? 'checked' : ''} data-index="${index}">
-        Saltable
-      </label>
       <div class="routine-item-actions">
         <button class="edit-item" data-index="${index}">⚙️</button>
         <button class="delete-item" data-index="${index}">🗑️</button>
@@ -425,13 +421,6 @@ function renderRoutineItems() {
     btn.addEventListener('click', () => {
       const index = parseInt(btn.dataset.index);
       showItemEditor(index);
-    });
-  });
-  
-  container.querySelectorAll('.checkbox-label input').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-      const index = parseInt(checkbox.dataset.index);
-      currentRoutineItems[index].skippable = checkbox.checked;
     });
   });
   
